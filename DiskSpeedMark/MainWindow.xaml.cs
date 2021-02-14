@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -44,6 +45,7 @@ namespace DiskSpeedMark
                 MessageBox.Show("Sorry, but it seems you disconnected this disk or it is unreachable.");
             }            
         }
+             
 
         private void _startTestBt_Click(object sender, RoutedEventArgs e)
         {
@@ -51,7 +53,6 @@ namespace DiskSpeedMark
             {
                 long sizeOfFile = long.Parse(_sizeOfFileTb.Text);
                 long sizeInBytes = 1;
-                string bla = _sizeUnitCb.SelectedItem.ToString();
 
                 try
                 {
@@ -72,10 +73,15 @@ namespace DiskSpeedMark
                     }
 
                     var test = new TestSpeed(Drive.Letter, sizeInBytes, int.Parse(_numberOfTestsTb.Text), _testProgressBar);
-                    test.RunTest();
-                    double AvgSpeed = test.writeSpeedResult.GetAvgSpeed();
-                    _resultsTb.Text += "Avg speed (mb/s): " + AvgSpeed.ToString("#0.00");
 
+                    #region Background worker
+                    BackgroundWorker worker = new BackgroundWorker();
+                    worker.DoWork += Worker_DoWork;
+                    worker.ProgressChanged += Worker_ProgressChanged;
+                    worker.WorkerReportsProgress = true;
+                    worker.RunWorkerCompleted += Worker_RunWorkerCompleted;
+                    worker.RunWorkerAsync(test);
+                    #endregion
                 }
                 catch (Exception ex)
                 {
@@ -88,6 +94,32 @@ namespace DiskSpeedMark
             {
                 MessageBox.Show("Choose parameters.");
             }
+        }
+
+        private void Worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            _testProgressBar.Value = e.ProgressPercentage;
+
+            FinalResult result = (FinalResult)e.UserState;
+
+            if (e.UserState!=null)
+            {
+                _avgWriteSpeedTb.Content = result.AvgWriteSpeed.ToString("#0.00") + " MB/s";
+                _avgReadSpeedTb.Content = result.AvgReadSpeed.ToString("#0.00") + " MB/s";
+                _avgWriteSpeedPb.Value = (double)result.AvgWriteSpeed / _avgWriteSpeedPb.Maximum;
+                _avgReadSpeedPb.Value = (double)result.AvgReadSpeed / _avgReadSpeedPb.Maximum;  
+            }
+        }
+
+        private void Worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+
+        }
+
+        private void Worker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            TestSpeed test = (TestSpeed)e.Argument;
+            test.RunTest(sender);
         }
 
         private void _sizeUnitCb_Initialized(object sender, EventArgs e)

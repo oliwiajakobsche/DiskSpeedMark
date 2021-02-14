@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DiskSpeedMark" xmlns:DVC="http://schemas.microsoft.com/winfx/2006/xaml/presentation/toolkit"
         mc:Ignorable="d"
-        Title="DiskSpeedMark" Height="650" Width="645" MaxWidth="800" MaxHeight="650"  WindowStyle="ThreeDBorderWindow" Background="#FFF7F7F7" FontSize="18">
+        Title="DiskSpeedMark" Height="650" Width="645" MaxWidth="800" MaxHeight="650"  WindowStyle="ThreeDBorderWindow" Background="#FFF7F7F7" FontSize="18" ResizeMode="NoResize">
     <Grid>
         <GroupBox x:Name="_DriveInfoGb" Header="Drive Info" Margin="315,10,0,0" HorizontalAlignment="Left" Width="298" VerticalAlignment="Top" Height="222" FontSize="23" FontWeight="Normal" IsEnabled="False">
             <Grid Margin="10,10,10,10" Height="167">
@@ -52,12 +52,10 @@
             </Grid>
         </GroupBox>
         <GroupBox Header="Test progress" Margin="10,237,10,309" FontSize="12">
-            <ProgressBar x:Name="_testProgressBar" Height="27" Margin="11,0,10,0" Value="{Binding ProgressBarValue}"/>
+            <ProgressBar x:Name="_testProgressBar" Height="27" Margin="11,0,10,0" Value="{Binding progress, UpdateSourceTrigger=PropertyChanged}"/>
         </GroupBox>
         <Button x:Name="_startTestBt" Content="Start Test" HorizontalAlignment="Left" Margin="20,192,0,0" VerticalAlignment="Top" Width="270" Height="36" Background="#FF4382C1" Foreground="White" FontWeight="Normal" Click="_startTestBt_Click"/>
-
-        <TextBlock x:Name="_resultsTb" HorizontalAlignment="Left" Margin="20,339,0,0" Text="Results: " TextWrapping="Wrap" VerticalAlignment="Top" Height="48" Width="579" Background="#FFEFF1F3"/>
-        <DVC:Chart x:Name="chart" Margin="14,372,32,9">
+        <DVC:Chart x:Name="chart" Margin="22,354,24,27">
             <DVC:Chart.LegendStyle>
                 <Style TargetType="Control">
                     <Setter Property="Width" Value="0"/>
@@ -76,5 +74,11 @@
                 <DVC:LinearAxis Orientation="X" Interval="10" Visibility="Hidden" Location="Top"/>
             </DVC:Chart.Axes>
         </DVC:Chart>
+        <ProgressBar x:Name="_avgWriteSpeedPb" HorizontalAlignment="Left" Height="33" Margin="173,312,0,0" VerticalAlignment="Top" Width="140" Minimum="0" Maximum="300"/>
+        <Label Content="Avg. write speed" HorizontalAlignment="Left" Margin="22,312,0,0" VerticalAlignment="Top"/>
+        <Label Content="Avg. read speed" HorizontalAlignment="Left" Margin="319,311,0,0" VerticalAlignment="Top" RenderTransformOrigin="-0.124,0.62"/>
+        <ProgressBar x:Name="_avgReadSpeedPb" HorizontalAlignment="Left" Height="33" Margin="462,313,0,0" VerticalAlignment="Top" Width="140" Minimum="0" Maximum="300"/>
+        <Label x:Name="_avgWriteSpeedTb" Content="--- MB/s" HorizontalAlignment="Left" Margin="199,312,0,0" VerticalAlignment="Top" Width="100"/>
+        <Label x:Name="_avgReadSpeedTb" Content="--- MB/s" HorizontalAlignment="Left" Margin="487,312,0,0" VerticalAlignment="Top" Width="100"/>
     </Grid>
 </Window>

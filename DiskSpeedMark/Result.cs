@@ -1,23 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace DiskSpeedMark
+﻿namespace DiskSpeedMark
 {
     internal class Result
     {
-        public long timeInSeconds { get; set; }
-        public double megabytes { get; set; }
+        public decimal TimeInSeconds { get; set; }
+        public decimal Megabytes { get; set; }
 
         public Result(long time, double bytes)
         {
-            this.timeInSeconds = time/1000;
-            this.megabytes = bytes/1024/1024;
+            this.TimeInSeconds = (decimal)time/1000;
+            this.Megabytes = (decimal)(bytes/1024/1024);
         }
 
-        public double GetAvgSpeed()
+        public decimal GetAvgSpeed()
         {
-            double avgSpeed = megabytes / timeInSeconds;
+            decimal avgSpeed = Megabytes / TimeInSeconds;
 
             return avgSpeed;
         }
