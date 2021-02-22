@@ -1,9 +1,7 @@
-﻿using System;
+﻿using DiskSpeedMark.Database;
+using System;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
-using System.Text;
-using System.Windows.Controls;
 
 namespace DiskSpeedMark
 {
@@ -12,11 +10,11 @@ namespace DiskSpeedMark
         private readonly long fileSize;
         private readonly int numberOfFiles;
         private readonly string driveLetter;
-        public Result writeSpeedResult;
-        public Result readSpeedResult;
-        BackgroundWorker worker;
+        public TestResult testResult;
+        private BackgroundWorker worker;
+        ResultsDbContext context = new ResultsDbContext();
 
-        public TestSpeed(string driveLetter, long fileSizeInBytes, int numberOfFiles, ProgressBar progressBar)
+        public TestSpeed(string driveLetter, long fileSizeInBytes, int numberOfFiles)
         {
             this.driveLetter = driveLetter;
             this.fileSize = fileSizeInBytes;
@@ -27,71 +25,82 @@ namespace DiskSpeedMark
         {
             this.worker = (BackgroundWorker)worker;
             this.worker.ReportProgress(0);
-            writeSpeedResult = WriteTest();
-            readSpeedResult = ReadTest();
-            this.worker.ReportProgress(100, new FinalResult { AvgWriteSpeed = WriteSpeedAvgResult(), AvgReadSpeed = ReadSpeedAvgResult()});
+            Result writeSpeedResult = WriteTest();
+            Result readSpeedResult = ReadTest();
+            testResult = new TestResult
+            {
+                AvgWriteSpeed = writeSpeedResult.GetAvgSpeed(),
+                AvgReadSpeed = readSpeedResult.GetAvgSpeed(),
+                FinishedAt = DateTime.Now.ToString(),
+                DriveName = driveLetter
+            };
+            this.worker.ReportProgress(100, testResult);
+            DeleteTestFiles();
+            SaveResultInDatabase();
         }
 
         private Result WriteTest()
         {
             byte[] testData = GenerateRandomArray(fileSize);
-            Stopwatch sw = new Stopwatch();
-            long sumTimes = 0;
+            TimeSpan timeSum = new TimeSpan(0);
 
-            for(int i = 1; i<=numberOfFiles; i++)
+            for (int i = 1; i <= numberOfFiles; i++)
             {
-                FileStream fileStream = new FileStream($"{ driveLetter }\\TestFile{ i }.txt", FileMode.Create, FileAccess.ReadWrite, FileShare.Read, (int)(fileSize), FileOptions.SequentialScan);
-                
-                sw.Restart();
-                fileStream.Write(testData, 0, testData.Length);
-                sw.Stop();
+                DateTime start = DateTime.Now;
 
-                double progress = (i / (numberOfFiles*2.0)) * 100.0;
-                worker.ReportProgress((int)progress);
+                using (FileStream fileStream = new FileStream($"{ driveLetter }\\TestFile{ i }.txt", FileMode.Create, FileAccess.ReadWrite, FileShare.Read, (int)fileSize, FileOptions.SequentialScan))
+                {
+                    fileStream.Write(testData, 0, testData.Length);
 
-                sumTimes += sw.ElapsedMilliseconds;
+                    var end = DateTime.Now;
+                    timeSum += end - start;
 
-                fileStream.Flush();
-                fileStream.Close();
+                    double progress = (i / (numberOfFiles * 2.0)) * 100.0;
+                    worker.ReportProgress((int)progress);
+                }
             }
 
-            return new Result(sumTimes, fileSize * numberOfFiles);
+            return new Result(timeSum, fileSize * numberOfFiles);
         }
 
         public Result ReadTest()
         {
-            Stopwatch sw = new Stopwatch();
-            long sumTimes = 0;
-
+            TimeSpan timeSum = new TimeSpan(0);
 
             for (int i = 1; i <= numberOfFiles; i++)
             {
-                FileStream fileStream = new FileStream($"{ driveLetter }\\TestFile{ i }.txt", FileMode.Open, FileAccess.Read, FileShare.Read, (int)(fileSize), FileOptions.SequentialScan);
+                byte[] testData = new byte[fileSize];
 
-                sw.Restart();
-                using var sr = new StreamReader(fileStream, Encoding.UTF8);
-                string content = sr.ReadToEnd();
-                sw.Stop();
+                var start = DateTime.Now;
 
-                double progress = (0.5 + (i / (numberOfFiles * 2.0))) * 100.0;
-                worker.ReportProgress((int)progress);
+                using (FileStream fileStream = new FileStream($"{ driveLetter }\\TestFile{ i }.txt", FileMode.Open, FileAccess.Read, FileShare.Read, (int)fileSize, FileOptions.SequentialScan))
+                {
+                    fileStream.Read(testData);
 
-                sumTimes += sw.ElapsedMilliseconds;
+                    var end = DateTime.Now;
+                    timeSum += end - start;
 
-                fileStream.Flush();
-                fileStream.Close();
+                    double progress = (0.5 + (i / (numberOfFiles * 2.0))) * 100.0;
+                    worker.ReportProgress((int)progress);
+                }
             }
 
-            return new Result(sumTimes, fileSize * numberOfFiles);
+            return new Result(timeSum, fileSize * numberOfFiles);
         }
 
-        public decimal WriteSpeedAvgResult()
+        private void DeleteTestFiles()
         {
-            return writeSpeedResult.GetAvgSpeed();
+            for (int i = 1; i <= numberOfFiles; i++)
+            {
+                FileInfo file = new FileInfo($"{ driveLetter }\\TestFile{ i }.txt");
+                file.Delete();
+            }
         }
-        public decimal ReadSpeedAvgResult()
+
+        private void SaveResultInDatabase()
         {
-            return readSpeedResult.GetAvgSpeed();
+            context.TestsResults.Add(testResult);
+            context.SaveChanges();
         }
 
         public byte[] GenerateRandomArray(long fileSizeInBytes)

@@ -30,16 +30,16 @@ namespace DiskSpeedMark
         }
 
         public static List<string> RefreshedList()
+        {
+            List<DriveInfo> drives = DriveInfo.GetDrives().ToList();
+            List<string> drivesList = new List<string>();
+
+            foreach (var drive in drives)
             {
-                List<DriveInfo> drives = DriveInfo.GetDrives().ToList();
-                List<string> drivesList = new List<string>();
-
-                foreach (var drive in drives)
-                {
-                    drivesList.Add($"{ drive.Name } { drive.VolumeLabel }");
-                }
-
-                return drivesList;
+                drivesList.Add($"{ drive.Name } { drive.VolumeLabel }");
             }
+
+            return drivesList;
+        }
     }
 }
