@@ -15,11 +15,17 @@ User need to choose drive to benchmark and test options (size of file and number
 * saves final result to table in sqlite database
 * displays table with results from database
 
+
 *Screenshot 1 - DiskSpeedMark example test result*
+
 ![Alt text](/Screenshots/Screen1.png?raw=true "Optional Title")
 
+
 *Screenshot 2 - Display of current data during the test and progress of test*
+
 ![Alt text](/Screenshots/Screen2.png?raw=true "Display of current data during the test and progress of test")
 
+
 *Screenshot 3 - Display test results from database*
+
 ![Alt text](/Screenshots/Screen3.png?raw=true "Display test results from database")
