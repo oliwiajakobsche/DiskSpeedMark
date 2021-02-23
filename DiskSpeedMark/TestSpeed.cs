@@ -2,6 +2,7 @@
 using System;
 using System.ComponentModel;
 using System.IO;
+using System.Threading;
 
 namespace DiskSpeedMark
 {
@@ -12,34 +13,39 @@ namespace DiskSpeedMark
         private readonly string driveLetter;
         public TestResult testResult;
         private BackgroundWorker worker;
-        ResultsDbContext context = new ResultsDbContext();
+        ResultsDbContext context;
+        Result result;
 
         public TestSpeed(string driveLetter, long fileSizeInBytes, int numberOfFiles)
         {
             this.driveLetter = driveLetter;
             this.fileSize = fileSizeInBytes;
             this.numberOfFiles = numberOfFiles;
+            context = new ResultsDbContext();
+            result = new Result(fileSizeInBytes, numberOfFiles);
         }
 
         public void RunTest(object worker)
         {
             this.worker = (BackgroundWorker)worker;
-            this.worker.ReportProgress(0);
-            Result writeSpeedResult = WriteTest();
-            Result readSpeedResult = ReadTest();
+            this.worker.ReportProgress(0, null);
+            WriteTest();
+            ReadTest();
             testResult = new TestResult
             {
-                AvgWriteSpeed = writeSpeedResult.GetAvgSpeed(),
-                AvgReadSpeed = readSpeedResult.GetAvgSpeed(),
+                AvgWriteSpeed = result.GetAvgWriteSpeed(),
+                AvgReadSpeed = result.GetAvgReadSpeed(),
                 FinishedAt = DateTime.Now.ToString(),
                 DriveName = driveLetter
             };
-            this.worker.ReportProgress(100, testResult);
             DeleteTestFiles();
             SaveResultInDatabase();
+
+            this.worker.ReportProgress(100, result);
+
         }
 
-        private Result WriteTest()
+        private void WriteTest()
         {
             byte[] testData = GenerateRandomArray(fileSize);
             TimeSpan timeSum = new TimeSpan(0);
@@ -54,16 +60,17 @@ namespace DiskSpeedMark
 
                     var end = DateTime.Now;
                     timeSum += end - start;
+                    result.AddWriteTime(end - start);
 
                     double progress = (i / (numberOfFiles * 2.0)) * 100.0;
-                    worker.ReportProgress((int)progress);
+                    worker.ReportProgress((int)progress, result);
+
+                    Thread.Sleep(100);
                 }
             }
-
-            return new Result(timeSum, fileSize * numberOfFiles);
         }
 
-        public Result ReadTest()
+        public void ReadTest()
         {
             TimeSpan timeSum = new TimeSpan(0);
 
@@ -79,13 +86,14 @@ namespace DiskSpeedMark
 
                     var end = DateTime.Now;
                     timeSum += end - start;
+                    result.AddReadTime(end - start);
 
                     double progress = (0.5 + (i / (numberOfFiles * 2.0))) * 100.0;
-                    worker.ReportProgress((int)progress);
+                    worker.ReportProgress((int)progress, result);
+
+                    Thread.Sleep(100);
                 }
             }
-
-            return new Result(timeSum, fileSize * numberOfFiles);
         }
 
         private void DeleteTestFiles()

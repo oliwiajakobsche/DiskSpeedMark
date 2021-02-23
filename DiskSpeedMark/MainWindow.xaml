@@ -55,23 +55,25 @@
             <ProgressBar x:Name="_testProgressBar" Height="27" Margin="10,0,11,0" Value="{Binding progress, UpdateSourceTrigger=PropertyChanged}"/>
         </GroupBox>
         <Button x:Name="_startTestBt" Content="Start Test" HorizontalAlignment="Left" Margin="20,192,0,0" VerticalAlignment="Top" Width="270" Height="36" Background="#FF4382C1" Foreground="White" FontWeight="Normal" Click="_startTestBt_Click"/>
-        <DVC:Chart x:Name="chart" Margin="22,367,24,73">
+        <DVC:Chart x:Name="chart" Margin="22,367,24,73"  FontSize="12">
             <DVC:Chart.LegendStyle>
                 <Style TargetType="Control">
-                    <Setter Property="Width" Value="0"/>
-                    <Setter Property="Height" Value="0"/>
+                    <Setter Property="Width" Value="100"/>
+                    <Setter Property="Height" Value="100"/>
+                    <Setter Property="Margin" Value="15"/>
+                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="Background" Value="Black"/>
                 </Style>
             </DVC:Chart.LegendStyle>
             <DVC:Chart.Series>
-                <DVC:LineSeries ItemsSource="{Binding}"
-                    DependentValuePath="Value" 
-                    IndependentValuePath="Key"
-                    IsSelectionEnabled="True" Margin="0,0,4,0">
+                <DVC:LineSeries x:Name="chartSeriesWrite" Title="Write speed (MB/s)" IndependentValueBinding="{Binding Path=Key}" DependentValueBinding="{Binding Path=Value}" IsSelectionEnabled="True" Margin="0,0,0,0">
+                </DVC:LineSeries>
+                <DVC:LineSeries x:Name="chartSeriesRead" Title="Read speed (MB/s)" IndependentValueBinding="{Binding Path=Key}" DependentValueBinding="{Binding Path=Value}"  IsSelectionEnabled="True">
                 </DVC:LineSeries>
             </DVC:Chart.Series>
             <DVC:Chart.Axes>
-                <DVC:LinearAxis Orientation="Y"/>
-                <DVC:LinearAxis Orientation="X" Interval="10" Visibility="Hidden" Location="Top"/>
+                <DVC:LinearAxis Orientation="Y" Title="MB/s" FontSize="10" ShowGridLines="True" />
+                <DVC:LinearAxis Orientation="X" Interval="1" Visibility="Visible" Location="Bottom" Title="Numer próby (pliku)" FontSize="10"/>
             </DVC:Chart.Axes>
         </DVC:Chart>
         <ProgressBar x:Name="_avgWriteSpeedPb" HorizontalAlignment="Left" Height="33" Margin="173,312,0,0" VerticalAlignment="Top" Width="140" Minimum="0" Maximum="300"/>

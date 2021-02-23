@@ -8,7 +8,7 @@ namespace DiskSpeedMark.Database
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlite("Data Source=BenchmarkDb.db");
+            optionsBuilder.UseSqlite("Data Source=Database\\BenchmarkDb.db");
             base.OnConfiguring(optionsBuilder);
         }
     }
